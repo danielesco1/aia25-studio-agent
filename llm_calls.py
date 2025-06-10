@@ -1,34 +1,34 @@
 from server.config import *
 
 
-def classify_input(message):
-    response = client.chat.completions.create(
-        model=completion_model,
-        messages=[
-            {
-                "role": "system",
-                "content": """
-                        Your task is to classify if the user message is related to buildings and architecture or not.
-                        Output only the classification string.
-                        If it is related, output "Related", if not, output "Refuse to answer".
+# def classify_input(message):
+#     response = client.chat.completions.create(
+#         model=completion_model,
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": """
+#                         Your task is to classify if the user message is related to buildings and architecture or not.
+#                         Output only the classification string.
+#                         If it is related, output "Related", if not, output "Refuse to answer".
 
-                        # Example #
-                        User message: "How do I bake cookies?"
-                        Output: "Refuse to answer"
+#                         # Example #
+#                         User message: "How do I bake cookies?"
+#                         Output: "Refuse to answer"
 
-                        User message: "What is the tallest skyscrapper in the world?"
-                        Output: "Related"
-                        """,
-            },
-            {
-                "role": "user",
-                "content": f"""
-                        {message}
-                        """,
-            },
-        ],
-    )
-    return response.choices[0].message.content
+#                         User message: "What is the tallest skyscrapper in the world?"
+#                         Output: "Related"
+#                         """,
+#             },
+#             {
+#                 "role": "user",
+#                 "content": f"""
+#                         {message}
+#                         """,
+#             },
+#         ],
+#     )
+#     return response.choices[0].message.content
 
 
 def generate_concept(message):
@@ -144,19 +144,32 @@ def define_window_ratio(message):
             {
                 "role": "system",
                 "content": """
-                        You are an international renowned architect and sustainability expert in passive house design.
-                        Your task is to provide window to wall ratio suggestion based on the local climate zone or city.
+                        You are an international renowned architect and sustainability expert in LEED and Passive House design.
+                        Your task is to provide the following suggestions based on the local climate zone or city:
+                        -window to wall ratio suggestion 
+                        -facade material and typical U-values
                         Keep your response to a maximum of one paragraph. Be specific and concise.
                         Provide a range of window to wall ratio (WWR) that is appropriate for the given climate zone or city.
+                        Provide three facade material suggestions with typical U-values that are suitable for the local climate zone or city.
                         Avoid generic descriptions.
                         Return the answer in the following format:
-                        {city}: {WWR}
-                        {minimum WWR}
-                        {maximum WWR}
+
+                        {city}: Min {min WWR} - Max {max WWR}. 
+                        Materials: 
+                        {facade material 1}, 
+                        {facade material 2}, 
+                        {facade material 3}      
+                    
                         For example:
-                        "New York: 0.3-0.5"
-                        0.3
-                        0.5
+                        "New York: Min 0.3- Max 0.5.
+
+                        Materials: 
+                        1- brick 
+                        2- stone
+                        3- aluminum panels
+                        "
+                        
+                
                         """,
             },
             {
@@ -229,6 +242,100 @@ def update_window(message):
                 "role": "user",
                 "content": f"""
                         Return the updated new WWR and new shading depth for a mid rise residential building in the following city:
+                        {message}
+                        """,
+            },
+        ],
+    )
+    return response.choices[0].message.content
+
+
+def sda_analysis(message):
+    response = client.chat.completions.create(
+        model=completion_model,
+        messages=[
+            {
+                "role": "system",
+                "content": """
+                You are an internationally renowned architect and daylighting specialist with expertise in sustainable residential design.  
+                Your task is to interpret the given spatial daylight autonomy (sDA) percentage for a city given, then provide:
+
+                1. A concise analysis of what the sDA result means for interior daylight quality.  
+            
+                Keep the analysis brief and focused on the implications of the sDA result in the following format, no extra text:
+
+                analysis: {your concise analysis here}  
+                                """,
+                            },
+                            {
+                                "role": "user",
+                                "content": f"""
+                Here are the current metrics spatial daylight autonomy for my residential project:
+                {message}
+                                """,
+                            },
+                        ],
+                    )
+    return response.choices[0].message.content
+
+def general_message(message):
+    response = client.chat.completions.create(
+        model=completion_model,
+        messages=[
+            {
+                "role": "system",
+                "content": """
+                You are an internationally renowned architect and daylighting specialist with expertise in sustainable residential design
+                Your task is to interpret the user's message as it relates to the building design and daylighting performance. Provide:
+                1. A concise analysis based on the use's message.  
+                2. Clear, actionable suggestions.
+
+                Return your answer **exactly** in this format (no extra text):
+
+                analysis: {your concise analysis here}  
+                suggestions:
+                - {First recommendation}
+                - {Second recommendation}
+                - {Third recommendation}
+                                """,
+                            },
+                            {
+                                "role": "user",
+                                "content": f"""
+                                {message}
+                                """,
+                            },
+                        ],
+                    )
+    return response.choices[0].message.content
+
+def classify_input(message):
+    response = client.chat.completions.create(
+        model=completion_model,
+        messages=[
+            {
+                "role": "system",
+                "content": """
+                        Your task is to classify if the user message is related to a topic question or not.
+                        Output only the classification string.
+                        You will receive a user message and you need to classify it as either "Relates spatial daylight autonomy (sDA)" or "Relates window to wall ratio suggestion" or "Not Related".
+                        
+                        # Example #
+                        User message: "Here are the current metrics for my residential project: "
+                        Output: "Relates spatial daylight autonomy (sDA)"
+
+                        User message: "what is the recommended window to wall ratio for this city for a mid rise residential building?
+                        Initial information:New York City"
+                        Output: "Relates window to wall ratio suggestion"
+                        
+                        User message: "How can I improve my building design?"
+                        Output: "Not Related"
+                    
+                        """,
+            },
+            {
+                "role": "user",
+                "content": f"""
                         {message}
                         """,
             },
